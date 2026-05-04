@@ -50,17 +50,14 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: AWS_REGION,ECR_REPOSITORY
           script: |
-            # Login to ECR on EC2 (uses IAM role on the instance)
             aws ecr get-login-password --region $AWS_REGION \
             | docker login --username AWS --password-stdin $ECR_REPOSITORY
-
-            # Pull latest image
+      
             docker pull $ECR_REPOSITORY:latest
-
-            # Stop/remove old container if exists
+      
             docker stop app || true
             docker rm app || true
-
-            # Run new container (nginx example on port 80)
+      
             docker run -d -p 80:80 --name app $ECR_REPOSITORY:latest
