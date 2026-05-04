@@ -1,0 +1,66 @@
+name: CI-CD
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 1) Configure AWS (for ECR push)
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 2) Login to ECR
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 3) Build image
+      - name: Build Docker image
+        run: docker build -t app .
+
+      # 4) Tag image
+      - name: Tag image
+        run: docker tag app:latest $ECR_REPOSITORY:latest
+
+      # 5) Push image
+      - name: Push image
+        run: docker push $ECR_REPOSITORY:latest
+
+      # 6) Deploy to EC2 (pull from ECR and run)
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Login to ECR on EC2 (uses IAM role on the instance)
+            aws ecr get-login-password --region $AWS_REGION \
+            | docker login --username AWS --password-stdin $ECR_REPOSITORY
+
+            # Pull latest image
+            docker pull $ECR_REPOSITORY:latest
+
+            # Stop/remove old container if exists
+            docker stop app || true
+            docker rm app || true
+
+            # Run new container (nginx example on port 80)
+            docker run -d -p 80:80 --name app $ECR_REPOSITORY:latest
