@@ -1,0 +1,54 @@
+- name: Configure EC2
+  hosts: web
+  become: yes
+
+  tasks:
+
+    - name: Install packages
+      apt:
+        name:
+          - docker.io
+          - awscli
+        update_cache: yes
+
+    - name: Start Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add ubuntu to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    # CloudWatch Agent install
+    - name: Download CloudWatch Agent
+      get_url:
+        url: https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+        dest: /tmp/cwagent.deb
+
+    - name: Install CloudWatch Agent
+      apt:
+        deb: /tmp/cwagent.deb
+
+    - name: Create config file
+      copy:
+        dest: /opt/aws/amazon-cloudwatch-agent/bin/config.json
+        content: |
+          {
+            "metrics": {
+              "namespace": "DevOpsApp",
+              "metrics_collected": {
+                "cpu": { "measurement": ["cpu_usage_idle"] },
+                "mem": { "measurement": ["mem_used_percent"] }
+              }
+            }
+          }
+
+    - name: Start CloudWatch Agent
+      command: >
+        /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl
+        -a fetch-config -m ec2
+        -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s
