@@ -33,7 +33,7 @@ jobs:
 
       # 3) Build image
       - name: Build Docker image
-        run: docker build -t app .
+        run: docker build -t app ./app
 
       # 4) Tag image
       - name: Tag image
