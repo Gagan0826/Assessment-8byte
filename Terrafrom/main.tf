@@ -23,6 +23,19 @@ module "ec2" {
   vpc_id    = module.vpc.vpc_id
   subnet_id = module.vpc.public_subnets[0]
 }
+resource "null_resource" "ansible" {
+
+  depends_on = [module.ec2]
+
+  provisioner "local-exec" {
+    command = <<EOT
+      echo "[web]" > ../ansible/inventory.ini
+      echo "${module.ec2.public_ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/devops-key.pem" >> ../ansible/inventory.ini
+      sleep 60
+      ansible-playbook -i ../ansible/inventory.ini ../ansible/playbook.yml
+    EOT
+  }
+}
 
 module "ecr" {
   source = "./modules/ECR"
