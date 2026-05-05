@@ -216,60 +216,23 @@ We use this together with Prometheus + Grafana:
 
    * Fixed by aligning version constraints
 
-2. Docker build path issue
-
-   * Fixed by using correct build context (`./app`)
-
-3. CI/CD SSH failures
-
-   * Resolved by proper key handling and permissions
-
-4. Port mismatch (3000 vs 80)
+2. Port mismatch (3000 vs 80)
 
    * Fixed using correct Docker port mapping
 
-5. Ansible execution via Terraform
+3. Ansible execution via Terraform
 
    * Failed due to SSH prompt and timing issues
    * Resolved by disabling host key checking and waiting for EC2 SSH readiness
 
-6. CloudWatch logs not appearing
+4. CloudWatch logs not appearing
 
    * Fixed by attaching correct IAM policy
+5. Excessive disk metrics in CloudWatch
 
----
-
-## Improvements
-
-* Use Auto Scaling Group instead of single EC2
-* Replace SSH deployment with ECS/EKS
-* Use Terraform remote backend (S3 + DynamoDB)
-* Add alerting in Prometheus
-* Use HTTPS with ALB
-
----
-
-## How to Validate
-
-1. Open application:
-
-```
-http://<EC2-IP>
-```
-
-2. Check CI/CD:
-
-* GitHub → Actions → successful run
-
-3. Check monitoring:
-
-* Grafana dashboards visible
-
-4. Check logs:
-
-* CloudWatch log groups populated
-
----
+   *CloudWatch Agent was collecting metrics for all mounted filesystems (snap, tmpfs, docker overlay)
+   *Resulted in noisy and confusing dashboards
+   *Fixed by updating ignore_file_system_types to exclude squashfs, tmpfs, and overlay
 
 ## Conclusion
 
@@ -411,8 +374,7 @@ RDS deployed in private subnet.
 - Improved data security  
 
 **Current Terraform note:**
-- RDS is in private subnets, but the RDS security group currently allows `5432` from `0.0.0.0/0`; restrict this before production use.
-
+- RDS is in private subnets, but the RDS security group currently allows `5432` from `0.0.0.0/0`.
 ---
 
 ### 5. Container Isolation
