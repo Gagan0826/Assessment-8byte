@@ -50,7 +50,7 @@ Developer → GitHub → GitHub Actions → AWS ECR → EC2 (Docker) → CloudWa
 
 ```
 ├── README.md
-├── Terrafrom
+├── Terraform
 │   ├── main.tf
 │   ├── modules
 │   │   ├── EC2
@@ -95,7 +95,7 @@ Terraform modules are used to provision:
 ### Run Terraform
 
 ```bash
-cd Terrafrom
+cd Terraform
 terraform init
 terraform apply
 ```
