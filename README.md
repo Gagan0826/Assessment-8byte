@@ -438,7 +438,7 @@ IAM policies are limited to:
 
 ---
 
-### 8. Known Limitations (Transparency)
+### 8. Known Limitations 
 
 - SSH access is open (0.0.0.0/0) for demo purposes  
 - HTTPS is not configured  
