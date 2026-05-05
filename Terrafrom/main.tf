@@ -32,7 +32,7 @@ resource "null_resource" "ansible" {
       echo "[web]" > ../ansible/inventory.ini
       echo "${module.ec2.public_ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/devops-key.pem" >> ../ansible/inventory.ini
       sleep 60
-      ansible-playbook -i ../ansible/inventory.ini ../ansible/playbook.yml
+      ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ../ansible/inventory.ini ../ansible/playbook.yml
     EOT
   }
 }
